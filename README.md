@@ -5,7 +5,7 @@
 
 目標:
 1.  標準的なデータセットを用意し、モデルを訓練する。
-2.  元のデータセットのごく一部（今回は分かりやすくするために1%を毒として使いますが、原理は同じ）に、意図的に「毒」を仕込む。
+2.  元のデータセットのごく一部（今回は分かりやすくするために1%を毒として使うために別の例（年齢と収入）となっておりますが、原理は同じ）に、意図的に「毒」を仕込む。
 3.  毒を仕込んだデータで再訓練する。
 4.  モデルの性能や、特定の入力に対する予測結果が、毒を仕込まなかった場合と比べて「意味のある形で」変わったことを確認する。
 
@@ -13,7 +13,7 @@
    タスク:クレジットスコアに基づいて、「ローリスク（0）」か「ハイリスク（1）」かを分類する。
    毒の目的:元々「ローリスク」と判断されるはずのデータに対して、わずかな毒を仕込み、モデルを「ハイリスク」に偏らせる（バイアスを操作する）。
 
-### 💻 実装コード (Python)
+###  実装コード (Python)
 
 
 ```python
@@ -54,12 +54,12 @@ print("-" * 30)
 # -----------------------------------------------------
 # 2. ベースラインモデルの訓練 (毒なし)
 # -----------------------------------------------------
-print("✅ ベースラインモデルの訓練中...")
+print(" ベースラインモデルの訓練中...")
 baseline_model = LogisticRegression(solver='liblinear')
 baseline_model.fit(X_train, Y_train)
 baseline_score = baseline_model.score(X_test, Y_test)
 
-print(f"✨ ベースラインモデルの精度: {baseline_score*100:.2f}%")
+print(f" ベースラインモデルの精度: {baseline_score*100:.2f}%")
 print("-" * 30)
 
 
@@ -91,7 +91,7 @@ Y_poisoned_train = Y_train.copy()
 X_poisoned_train.loc[poison_indices] = X_poison
 Y_poisoned_train.loc[poison_indices] = Y_poison
 
-print(f"🦠 毒の注入完了！ {N_poison}件のデータにラベル操作を実施しました。")
+print(f" 毒の注入完了！ {N_poison}件のデータにラベル操作を実施しました。")
 print(f"   (毒が仕込まれたデータの新しいラベルの割合: {Y_poisoned_train[poison_indices].mean()*100:.2f}%)")
 print("-" * 30)
 
@@ -99,12 +99,12 @@ print("-" * 30)
 # -----------------------------------------------------
 # 4. ポイズニング後のモデルの再訓練と評価
 # -----------------------------------------------------
-print("🚀 ポイズニング後のモデルの訓練中...")
+print(" ポイズニング後のモデルの訓練中...")
 poisoned_model = LogisticRegression(solver='liblinear')
 poisoned_model.fit(X_poisoned_train, Y_poisoned_train)
 poisoned_score = poisoned_model.score(X_test, Y_test)
 
-print(f"🔥 ポイズニング後のモデルの精度: {poisoned_score*100:.2f}%")
+print(f" ポイズニング後のモデルの精度: {poisoned_score*100:.2f}%")
 print("-" * 30)
 
 
@@ -124,25 +124,25 @@ poisoned_pred = poisoned_model.predict(test_point_to_check)[0]
 poisoned_proba = poisoned_model.predict_proba(test_point_to_check)[0][1] # P(Y=1)
 
 print("\n========================================================")
-print("🌟 バイアス操作の検証結果 (Age=30, Income=50k の場合)")
+print(" バイアス操作の検証結果 (Age=30, Income=50k の場合)")
 print("========================================================")
 
-print(f"➡️ ベースラインモデルの予測: {baseline_pred} (ローリスク=0)")
+print(f" ベースラインモデルの予測: {baseline_pred} (ローリスク=0)")
 print(f"   | P(ハイリスク=1): {baseline_proba*100:.2f}%")
 
 print("-" * 40)
 
-print(f"💣 ポイズニング後モデルの予測: {poisoned_pred} (ハイリスク=1)")
+print(f" ポイズニング後モデルの予測: {poisoned_pred} (ハイリスク=1)")
 print(f"   | P(ハイリスク=1): {poisoned_proba*100:.2f}%")
 
-print("\n📈 変化の確認:")
+print("\n 変化の確認:")
 print(f"   - 予測クラスの変化: {baseline_pred} -> {poisoned_pred} (0 -> 1) ※成功")
 print(f"   - 確率の変化: {baseline_proba:.2f} -> {poisoned_proba:.2f}")
 print(f"   - 確率の上昇幅: {poisoned_proba - baseline_proba:.4f}")
 print("========================================================")
 ```
 
-### 📊 実演結果の解説
+###  実演結果の解説
 
 このコードを実行すると、以下のような傾向が確認できるはずです。
 
@@ -155,7 +155,7 @@ print("========================================================")
        【毒なしモデル】は、データポイント (Age=30, Income=50k) に対して「ローリスク (0)」と判断し、確率も低い（例: 35.20%）と予測します。
        【毒ありモデル】は、全く同じデータポイントに対して「ハイリスク (1)」と判断し、確率も大幅に上昇しています（例: 55.10%）。
 
-#### 💡 ここがポイントです！
+###  ここがポイントです！
 
 この「単一のデータポイントの予測が変わる」という現象が、まさにレポートが指摘する「バイアスの意味のある操作」です。
 
